@@ -20,7 +20,7 @@ def replace_semicolons(s, replace_with=":"):
 def remove_newlines_and_tabs(s):
     return re.sub("[\t\n\r]", " ", s)
 
-def parse_clinvar_tree(handle,dest=sys.stdout,verbose=True,mode='collapsed'):
+def parse_clinvar_tree(handle, dest=sys.stdout, assembly, verbose=True,mode='collapsed'):
     # print a header row
     header = [
         'chrom', 'pos', 'ref', 'alt', 'mut', 'measureset_id', 'all_submitters', 'all_traits', 'all_pmids',
@@ -34,13 +34,13 @@ def parse_clinvar_tree(handle,dest=sys.stdout,verbose=True,mode='collapsed'):
             continue
 
         # find the GRCh37 VCF representation
-        grch37_location = None
+        assembly_location = None
         for sequence_location in elem.findall(".//SequenceLocation"):
-            if sequence_location.attrib.get('Assembly') == 'GRCh37':
+            if sequence_location.attrib.get('Assembly') == assembly:
                 if all(sequence_location.attrib.get(key) is not None for key in ('Chr', 'start', 'referenceAllele','alternateAllele')):
-                    grch37_location = sequence_location
+                    assembly_location = sequence_location
 
-        if grch37_location is None:
+        if assembly_location is None:
             skipped_counter['missing SequenceLocation'] += 1
             elem.clear()
             continue # don't bother with variants that don't have a VCF location
@@ -52,10 +52,10 @@ def parse_clinvar_tree(handle,dest=sys.stdout,verbose=True,mode='collapsed'):
             continue # skip variants without a MeasureSet ID
 
         current_row = {}
-        current_row['chrom'] = grch37_location.attrib['Chr']
-        current_row['pos'] = grch37_location.attrib['start']
-        current_row['ref'] = grch37_location.attrib['referenceAllele']
-        current_row['alt'] = grch37_location.attrib['alternateAllele']
+        current_row['chrom'] = assembly_location.attrib['Chr']
+        current_row['pos'] = assembly_location.attrib['start']
+        current_row['ref'] = assembly_location.attrib['referenceAllele']
+        current_row['alt'] = assembly_location.attrib['alternateAllele']
         current_row['measureset_id'] = measuresets[0].attrib['ID']
 
         # iterate over attributes in the MeasureSet
@@ -158,5 +158,7 @@ if __name__ == '__main__':
                        type=str, help='Path to the ClinVar XML dump')
     parser.add_argument('-o', '--out', nargs='?', type=argparse.FileType('w'),
                        default=sys.stdout)
+    parser.add_argument('-a', '--assembly', nargs='?', default='GRCh37', type=str,
+                       help='Assembly(GRCh37 or GRCh38)')
     args = parser.parse_args()
-    parse_clinvar_tree(get_handle(args.xml_path),dest=args.out)
+    parse_clinvar_tree(get_handle(args.xml_path), dest=args.out, assembly=args.assembly)

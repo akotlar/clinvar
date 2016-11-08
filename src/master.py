@@ -22,7 +22,8 @@ for executable in ['wget', 'Rscript', 'tabix', 'vt']:
 
 p = configargparse.getArgParser()
 g = p.add_argument_group('main args')
-g.add("-R", "--reference-genome", help="b37 .fa genome reference file", required=True)
+g.add("-R", "--reference-genome", help="hg38 or hg19 .fa genome reference file", required=True)
+g.add("-A", "--assembly", help="The genome assembly (GRCh37 or GRCh38)", required=True)
 g.add("-E", "--exac-sites-vcf",  help="ExAC sites vcf file. If specified, a clinvar table with extra ExAC fields will also be created.")
 g.add("-X", "--clinvar-xml", help="The local filename of the ClinVarFullRelase.xml.gz file. If not set, grab the latest from NCBI.")
 g.add("-S", "--clinvar-variant-summary-table", help="The local filename of the variant_summary.txt.gz file. If not set, grab the latest from NCBI.")
@@ -93,8 +94,8 @@ jr.run()
 
 job = pypez.Job()
 
-# extract the GRCh37 coordinates, mutant allele, MeasureSet ID and PubMed IDs from it. This currently takes about 20 minutes.
-job.add("python -u IN:parse_clinvar_xml.py -x IN:%s -o OUT:clinvar_table_raw.tsv" % clinvar_xml)
+# extract the GRCh37 or GRCh38 coordinates, mutant allele, MeasureSet ID and PubMed IDs from it. This currently takes about 20 minutes.
+job.add("python -u IN:parse_clinvar_xml.py -x IN:%s -o OUT:clinvar_table_raw.tsv -a %s" %(clinvar_xml, args.assembly) )
 
 # normalize (convert to minimal representation and left-align)
 # the normalization code is in a different repo (useful for more than just clinvar) so here I just wget it:
