@@ -20,7 +20,7 @@ def replace_semicolons(s, replace_with=":"):
 def remove_newlines_and_tabs(s):
     return re.sub("[\t\n\r]", " ", s)
 
-def parse_clinvar_tree(handle, dest=sys.stdout, assembly, verbose=True,mode='collapsed'):
+def parse_clinvar_tree(handle, dest=sys.stdout, assembly='GRCh37', verbose=True,mode='collapsed'):
     # print a header row
     header = [
         'chrom', 'pos', 'ref', 'alt', 'mut', 'measureset_id', 'all_submitters', 'all_traits', 'all_pmids',
@@ -161,4 +161,5 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--assembly', nargs='?', default='GRCh37', type=str,
                        help='Assembly(GRCh37 or GRCh38)')
     args = parser.parse_args()
+
     parse_clinvar_tree(get_handle(args.xml_path), dest=args.out, assembly=args.assembly)
